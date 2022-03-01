@@ -1,12 +1,15 @@
 import {
   BaseFilter,
   DduItem,
+  ItemHighlight,
   SourceOptions,
-} from "https://deno.land/x/ddu_vim@v0.1.0/types.ts";
-import { Denops } from "https://deno.land/x/ddu_vim@v0.1.0/deps.ts";
-import { extendedMatch, Fzf } from "https://esm.sh/fzf@0.4.1";
+} from "https://deno.land/x/ddu_vim@v0.13/types.ts";
+import { Denops } from "https://deno.land/x/ddu_vim@v0.13/deps.ts";
+import { extendedMatch, Fzf } from "https://esm.sh/fzf@0.5.1";
 
-type Params = Record<never, never>;
+type Params = {
+  highlightMatched: string;
+};
 
 export class Filter extends BaseFilter<Params> {
   filter(args: {
@@ -14,6 +17,7 @@ export class Filter extends BaseFilter<Params> {
     sourceOptions: SourceOptions;
     input: string;
     items: DduItem[];
+    filterParams: Params;
   }): Promise<DduItem[]> {
     const input = args.input;
 
@@ -22,10 +26,33 @@ export class Filter extends BaseFilter<Params> {
       match: extendedMatch,
     });
 
-    return Promise.resolve(fzf.find(input).map((v) => v.item));
+    const items = fzf.find(input);
+    if (args.filterParams.highlightMatched === "") {
+      return Promise.resolve(items.map((v) => v.item));
+    }
+
+    return Promise.resolve(items.map((v) => {
+      if (v.start >= 0) {
+        const highlights: ItemHighlight[] = [];
+        for (const position of v.positions) {
+          highlights.push({
+            name: "matched",
+            "hl_group": args.filterParams.highlightMatched,
+            col: position + 1,
+            width: 1,
+          });
+        }
+        return {
+          ...v.item,
+          highlights: highlights,
+        };
+      } else {
+        return v.item;
+      }
+    }));
   }
 
   params(): Params {
-    return {};
+    return { highlightMatched: "" };
   }
 }
