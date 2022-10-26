@@ -11,6 +11,11 @@ type Params = {
   highlightMatched: string;
 };
 
+// from https://github.com/Shougo/ddu-filter-matcher_substring/blob/c6d56f3548b546803ef336b8f0aa379971db8c9a/denops/%40ddu-filters/matcher_substring.ts#L13-L15
+function charposToBytepos(input: string, pos: number): number {
+  return (new TextEncoder()).encode(input.slice(0, pos)).length;
+}
+
 export class Filter extends BaseFilter<Params> {
   filter(args: {
     denops: Denops;
@@ -38,8 +43,8 @@ export class Filter extends BaseFilter<Params> {
           highlights.push({
             name: "matched",
             "hl_group": args.filterParams.highlightMatched,
-            col: position + 1,
-            width: 1,
+            col: charposToBytepos(v.item.word, position) + 1,
+            width: new TextEncoder().encode(v.item.word[position]).length,
           });
         }
         return {
