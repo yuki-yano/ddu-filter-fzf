@@ -9,6 +9,7 @@ import { extendedMatch, Fzf } from "https://esm.sh/fzf@0.5.1";
 
 type Params = {
   highlightMatched: string;
+  sort: boolean;
 };
 
 export class Filter extends BaseFilter<Params> {
@@ -22,8 +23,9 @@ export class Filter extends BaseFilter<Params> {
     const input = args.input;
 
     const fzf = new Fzf(args.items, {
-      selector: (item) => item.word,
       match: extendedMatch,
+      selector: (item) => item.word,
+      sort: args.filterParams.sort,
     });
 
     const items = fzf.find(input);
@@ -53,6 +55,9 @@ export class Filter extends BaseFilter<Params> {
   }
 
   params(): Params {
-    return { highlightMatched: "" };
+    return {
+      highlightMatched: "",
+      sort: true,
+    };
   }
 }
