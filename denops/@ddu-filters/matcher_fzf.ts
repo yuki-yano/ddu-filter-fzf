@@ -12,9 +12,11 @@ type Params = {
   sort: boolean;
 };
 
+const ENCODER = new TextEncoder();
+
 // from https://github.com/Shougo/ddu-filter-matcher_substring/blob/c6d56f3548b546803ef336b8f0aa379971db8c9a/denops/%40ddu-filters/matcher_substring.ts#L13-L15
 function charposToBytepos(input: string, pos: number): number {
-  return (new TextEncoder()).encode(input.slice(0, pos)).length;
+  return ENCODER.encode(input.slice(0, pos)).length;
 }
 
 export class Filter extends BaseFilter<Params> {
@@ -29,7 +31,7 @@ export class Filter extends BaseFilter<Params> {
 
     const fzf = new Fzf(args.items, {
       match: extendedMatch,
-      selector: (item) => item.word,
+      selector: (item) => item.matcherKey || item.word,
       sort: args.filterParams.sort,
     });
 
@@ -40,15 +42,35 @@ export class Filter extends BaseFilter<Params> {
 
     return Promise.resolve(items.map((v) => {
       if (v.start >= 0) {
-        const highlights: ItemHighlight[] = [];
-        for (const position of v.positions) {
-          highlights.push({
-            name: "matched",
-            "hl_group": args.filterParams.highlightMatched,
-            col: charposToBytepos(v.item.word, position) + 1,
-            width: new TextEncoder().encode(v.item.word[position]).length,
-          });
-        }
+        const target = v.item.matcherKey || v.item.word;
+        const positions = [...v.positions].sort((a, b) => a - b);
+        let curStart = positions.shift(), curLength = 1;
+
+        const highlights: ItemHighlight[] = positions.reduce((acc, pos) => {
+          if (pos > curStart + curLength) {
+            acc.push({
+              name: "matched",
+              "hl_group": args.filterParams.highlightMatched,
+              col: charposToBytepos(target, curStart) + 1,
+              width: curLength,
+            });
+
+            curStart = pos;
+            curLength = 1;
+          } else {
+            curLength += ENCODER.encode(target[curStart + curLength]).length;
+          }
+
+          return acc;
+        }, []);
+
+        highlights.push({
+          name: "matched",
+          "hl_group": args.filterParams.highlightMatched,
+          col: charposToBytepos(target, curStart) + 1,
+          width: curLength,
+        });
+
         return {
           ...v.item,
           highlights: highlights,
