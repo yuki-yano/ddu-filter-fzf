@@ -44,32 +44,25 @@ export class Filter extends BaseFilter<Params> {
       if (v.start >= 0) {
         const target = v.item.matcherKey || v.item.word;
         const positions = [...v.positions].sort((a, b) => a - b);
-        let curStart = positions.shift(), curLength = 1;
+        const highlights: ItemHighlight[] = [];
+        let cur = positions.shift();
 
-        const highlights: ItemHighlight[] = positions.reduce((acc, pos) => {
-          if (pos > curStart + curLength) {
-            acc.push({
-              name: "matched",
-              "hl_group": args.filterParams.highlightMatched,
-              col: charposToBytepos(target, curStart) + 1,
-              width: curLength,
-            });
+        do {
+          let len = 1;
 
-            curStart = pos;
-            curLength = 1;
-          } else {
-            curLength += ENCODER.encode(target[curStart + curLength]).length;
+          while (positions[0] === cur + len) {
+            positions.shift();
+
+            len++;
           }
 
-          return acc;
-        }, []);
-
-        highlights.push({
-          name: "matched",
-          "hl_group": args.filterParams.highlightMatched,
-          col: charposToBytepos(target, curStart) + 1,
-          width: curLength,
-        });
+          highlights.push({
+            name: "matched",
+            "hl_group": args.filterParams.highlightMatched,
+            col: charposToBytepos(target, cur) + 1,
+            width: len,
+          });
+        } while (cur = positions.shift());
 
         return {
           ...v.item,
