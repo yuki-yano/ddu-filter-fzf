@@ -44,7 +44,7 @@ export class Filter extends BaseFilter<Params> {
       if (v.start >= 0) {
         const target = v.item.matcherKey || v.item.word;
         const positions = [...v.positions].sort((a, b) => a - b);
-        const highlights: ItemHighlight[] = [];
+        const { highlights = [] } = v.item;
         const offset = v.item.display?.indexOf(target) ?? 0;
 
         if (offset === -1) {
