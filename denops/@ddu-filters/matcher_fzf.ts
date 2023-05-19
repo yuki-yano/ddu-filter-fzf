@@ -6,6 +6,8 @@ import {
 import { Denops } from "https://deno.land/x/ddu_vim@v0.13/deps.ts";
 import { extendedMatch, Fzf } from "https://esm.sh/fzf@0.5.1";
 
+const HIGHLIGHT_NAME = "fzf_matched";
+
 type Params = {
   highlightMatched: string;
   sort: boolean;
@@ -43,7 +45,8 @@ export class Filter extends BaseFilter<Params> {
       if (v.start >= 0) {
         const target = v.item.matcherKey || v.item.word;
         const positions = [...v.positions].sort((a, b) => a - b);
-        const { highlights = [] } = v.item;
+        let { highlights = [] } = v.item;
+        highlights = highlights.filter((hl) => hl.name !== HIGHLIGHT_NAME);
         let offset = 0;
         if (v.item.display !== undefined) {
           const offset_char = v.item.display.indexOf(target);
@@ -65,7 +68,7 @@ export class Filter extends BaseFilter<Params> {
           }
 
           highlights.push({
-            name: "matched",
+            name: HIGHLIGHT_NAME,
             hl_group: args.filterParams.highlightMatched,
             col: offset + charposToBytepos(target, cur) + 1, // character position is 1-based
             width: len,
