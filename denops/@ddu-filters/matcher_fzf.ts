@@ -44,7 +44,11 @@ export class Filter extends BaseFilter<Params> {
         const target = v.item.matcherKey || v.item.word;
         const positions = [...v.positions].sort((a, b) => a - b);
         const { highlights = [] } = v.item;
-        const offset = v.item.display?.indexOf(target) ?? 0;
+        let offset = 0;
+        if (v.item.display !== undefined) {
+          const offset_char = v.item.display.indexOf(target);
+          offset = charposToBytepos(v.item.display, offset_char);
+        }
 
         if (offset === -1) {
           return v.item;
