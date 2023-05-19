@@ -45,6 +45,12 @@ export class Filter extends BaseFilter<Params> {
         const target = v.item.matcherKey || v.item.word;
         const positions = [...v.positions].sort((a, b) => a - b);
         const highlights: ItemHighlight[] = [];
+        const offset = v.item.display?.indexOf(target) ?? 0;
+
+        if (offset === -1) {
+          return v.item;
+        }
+
         let cur = positions.shift();
 
         do {
@@ -59,7 +65,7 @@ export class Filter extends BaseFilter<Params> {
           highlights.push({
             name: "matched",
             hl_group: args.filterParams.highlightMatched,
-            col: charposToBytepos(target, cur) + 1,
+            col: offset + charposToBytepos(target, cur) + 1, // character position is 1-based
             width: len,
           });
         } while (cur = positions.shift());
