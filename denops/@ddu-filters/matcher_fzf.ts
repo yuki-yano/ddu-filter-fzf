@@ -12,9 +12,11 @@ type Params = {
   sort: boolean;
 };
 
+const ENCODER = new TextEncoder();
+
 // from https://github.com/Shougo/ddu-filter-matcher_substring/blob/c6d56f3548b546803ef336b8f0aa379971db8c9a/denops/%40ddu-filters/matcher_substring.ts#L13-L15
 function charposToBytepos(input: string, pos: number): number {
-  return (new TextEncoder()).encode(input.slice(0, pos)).length;
+  return ENCODER.encode(input.slice(0, pos)).length;
 }
 
 export class Filter extends BaseFilter<Params> {
@@ -29,7 +31,7 @@ export class Filter extends BaseFilter<Params> {
 
     const fzf = new Fzf(args.items, {
       match: extendedMatch,
-      selector: (item) => item.word,
+      selector: (item) => item.matcherKey || item.word,
       sort: args.filterParams.sort,
     });
 
@@ -40,19 +42,22 @@ export class Filter extends BaseFilter<Params> {
 
     return Promise.resolve(items.map((v) => {
       if (v.start >= 0) {
-        const offset = v.item.display?.indexOf(v.item.word) ?? 0
+        const target = v.item.matcherKey || v.item.word;
+        const offset = v.item.display?.indexOf(target) ?? 0;
         if (offset === -1) {
-          return v.item
+          return v.item;
         }
+
         const highlights: ItemHighlight[] = [];
         for (const position of v.positions) {
           highlights.push({
             name: "matched",
-            "hl_group": args.filterParams.highlightMatched,
-            col: offset + charposToBytepos(v.item.word, position) + 1,
-            width: new TextEncoder().encode(v.item.word[position]).length,
+            hl_group: args.filterParams.highlightMatched,
+            col: offset + charposToBytepos(target, position) + 1,
+            width: ENCODER.encode(v.item.word[position]).length,
           });
         }
+
         return {
           ...v.item,
           highlights: highlights,
