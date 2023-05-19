@@ -54,7 +54,7 @@ export class Filter extends BaseFilter<Params> {
             name: "matched",
             hl_group: args.filterParams.highlightMatched,
             col: offset + charposToBytepos(target, position) + 1,
-            width: ENCODER.encode(v.item.word[position]).length,
+            width: ENCODER.encode(target[position]).length,
           });
         }
 
