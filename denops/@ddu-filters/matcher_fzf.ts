@@ -43,20 +43,26 @@ export class Filter extends BaseFilter<Params> {
     return Promise.resolve(items.map((v) => {
       if (v.start >= 0) {
         const target = v.item.matcherKey || v.item.word;
-        const offset = v.item.display?.indexOf(target) ?? 0;
-        if (offset === -1) {
-          return v.item;
-        }
-
+        const positions = [...v.positions].sort((a, b) => a - b);
         const highlights: ItemHighlight[] = [];
-        for (const position of v.positions) {
+        let cur = positions.shift();
+
+        do {
+          let len = 1;
+
+          while (positions[0] === cur + len) {
+            positions.shift();
+
+            len++;
+          }
+
           highlights.push({
             name: "matched",
             hl_group: args.filterParams.highlightMatched,
-            col: offset + charposToBytepos(target, position) + 1,
-            width: ENCODER.encode(target[position]).length,
+            col: charposToBytepos(target, cur) + 1,
+            width: len,
           });
-        }
+        } while (cur = positions.shift());
 
         return {
           ...v.item,
