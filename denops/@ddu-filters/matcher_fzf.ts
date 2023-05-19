@@ -1,7 +1,6 @@
 import {
   BaseFilter,
   DduItem,
-  ItemHighlight,
   SourceOptions,
 } from "https://deno.land/x/ddu_vim@v0.13/types.ts";
 import { Denops } from "https://deno.land/x/ddu_vim@v0.13/deps.ts";
