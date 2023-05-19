@@ -40,12 +40,16 @@ export class Filter extends BaseFilter<Params> {
 
     return Promise.resolve(items.map((v) => {
       if (v.start >= 0) {
+        const offset = v.item.display?.indexOf(v.item.word) ?? 0
+        if (offset === -1) {
+          return v.item
+        }
         const highlights: ItemHighlight[] = [];
         for (const position of v.positions) {
           highlights.push({
             name: "matched",
             "hl_group": args.filterParams.highlightMatched,
-            col: charposToBytepos(v.item.word, position) + 1,
+            col: offset + charposToBytepos(v.item.word, position) + 1,
             width: new TextEncoder().encode(v.item.word[position]).length,
           });
         }
