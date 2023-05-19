@@ -53,12 +53,11 @@ export class Filter extends BaseFilter<Params> {
 
         let cur = positions.shift();
 
-        do {
+        while (cur !== undefined) {
           let len = 1;
 
           while (positions[0] === cur + len) {
             positions.shift();
-
             len++;
           }
 
@@ -68,7 +67,9 @@ export class Filter extends BaseFilter<Params> {
             col: offset + charposToBytepos(target, cur) + 1, // character position is 1-based
             width: len,
           });
-        } while (cur = positions.shift());
+
+          cur = positions.shift();
+        }
 
         return {
           ...v.item,
