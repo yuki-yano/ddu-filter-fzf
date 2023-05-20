@@ -1,11 +1,12 @@
 import {
   BaseFilter,
   DduItem,
-  ItemHighlight,
   SourceOptions,
 } from "https://deno.land/x/ddu_vim@v0.13/types.ts";
 import { Denops } from "https://deno.land/x/ddu_vim@v0.13/deps.ts";
 import { extendedMatch, Fzf } from "https://esm.sh/fzf@0.5.1";
+
+const HIGHLIGHT_NAME = "fzf_matched";
 
 type Params = {
   highlightMatched: string;
@@ -44,8 +45,13 @@ export class Filter extends BaseFilter<Params> {
       if (v.start >= 0) {
         const target = v.item.matcherKey || v.item.word;
         const positions = [...v.positions].sort((a, b) => a - b);
-        const highlights: ItemHighlight[] = [];
-        const offset = v.item.display?.indexOf(target) ?? 0;
+        let { highlights = [] } = v.item;
+        highlights = highlights.filter((hl) => hl.name !== HIGHLIGHT_NAME);
+        let offset = 0;
+        if (v.item.display !== undefined) {
+          const offset_char = v.item.display.indexOf(target);
+          offset = charposToBytepos(v.item.display, offset_char);
+        }
 
         if (offset === -1) {
           return v.item;
@@ -53,22 +59,23 @@ export class Filter extends BaseFilter<Params> {
 
         let cur = positions.shift();
 
-        do {
+        while (cur !== undefined) {
           let len = 1;
 
           while (positions[0] === cur + len) {
             positions.shift();
-
             len++;
           }
 
           highlights.push({
-            name: "matched",
+            name: HIGHLIGHT_NAME,
             hl_group: args.filterParams.highlightMatched,
             col: offset + charposToBytepos(target, cur) + 1, // character position is 1-based
             width: len,
           });
-        } while (cur = positions.shift());
+
+          cur = positions.shift();
+        }
 
         return {
           ...v.item,
