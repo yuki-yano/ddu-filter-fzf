@@ -10,7 +10,6 @@ const HIGHLIGHT_NAME = "fzf_matched";
 
 type Params = {
   highlightMatched: string;
-  sort: boolean;
 };
 
 const ENCODER = new TextEncoder();
@@ -33,7 +32,7 @@ export class Filter extends BaseFilter<Params> {
     const fzf = new Fzf(args.items, {
       match: extendedMatch,
       selector: (item) => item.matcherKey || item.word,
-      sort: args.filterParams.sort,
+      sort: false,
     });
 
     const items = fzf.find(input);
@@ -79,7 +78,10 @@ export class Filter extends BaseFilter<Params> {
 
         return {
           ...v.item,
-          highlights: highlights,
+          highlights,
+          data: {
+            fzfScore: v.score,
+          },
         };
       } else {
         return v.item;
@@ -90,7 +92,6 @@ export class Filter extends BaseFilter<Params> {
   params(): Params {
     return {
       highlightMatched: "",
-      sort: true,
     };
   }
 }
