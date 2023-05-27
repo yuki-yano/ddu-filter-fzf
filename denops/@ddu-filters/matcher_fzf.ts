@@ -2,15 +2,14 @@ import {
   BaseFilter,
   DduItem,
   SourceOptions,
-} from "https://deno.land/x/ddu_vim@v0.13/types.ts";
-import { Denops } from "https://deno.land/x/ddu_vim@v0.13/deps.ts";
+} from "https://deno.land/x/ddu_vim@v2.8.6/types.ts";
+import { Denops } from "https://deno.land/x/ddu_vim@v2.8.6/deps.ts";
 import { extendedMatch, Fzf } from "https://esm.sh/fzf@0.5.1";
 
 const HIGHLIGHT_NAME = "fzf_matched";
 
 type Params = {
   highlightMatched: string;
-  sort: boolean;
 };
 
 const ENCODER = new TextEncoder();
@@ -33,7 +32,7 @@ export class Filter extends BaseFilter<Params> {
     const fzf = new Fzf(args.items, {
       match: extendedMatch,
       selector: (item) => item.matcherKey || item.word,
-      sort: args.filterParams.sort,
+      sort: false,
     });
 
     const items = fzf.find(input);
@@ -79,7 +78,10 @@ export class Filter extends BaseFilter<Params> {
 
         return {
           ...v.item,
-          highlights: highlights,
+          highlights,
+          data: {
+            fzfScore: v.score,
+          },
         };
       } else {
         return v.item;
@@ -90,7 +92,6 @@ export class Filter extends BaseFilter<Params> {
   params(): Params {
     return {
       highlightMatched: "",
-      sort: true,
     };
   }
 }
