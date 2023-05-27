@@ -34,6 +34,7 @@ EXAMPLES      *ddu-filter-fzf-examples*
       \   'sourceOptions': {
       \     '_': {
       \       'matchers': ['matcher_fzf'],
+      \       'sorters': ['sorter_fzf'],
       \     },
       \   }
       \ })
