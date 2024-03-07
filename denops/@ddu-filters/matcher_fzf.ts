@@ -80,6 +80,7 @@ export class Filter extends BaseFilter<Params> {
           ...v.item,
           highlights,
           data: {
+            ...(v.item.data || {}),
             fzfScore: v.score,
           },
         };
